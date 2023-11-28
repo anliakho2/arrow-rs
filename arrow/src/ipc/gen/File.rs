@@ -38,39 +38,25 @@ impl std::fmt::Debug for Block {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for Block {}
-impl flatbuffers::SafeSliceAccess for Block {}
 impl<'a> flatbuffers::Follow<'a> for Block {
     type Inner = &'a Block;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         <&'a Block>::follow(buf, loc)
     }
 }
 impl<'a> flatbuffers::Follow<'a> for &'a Block {
     type Inner = &'a Block;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         flatbuffers::follow_cast_ref::<Block>(buf, loc)
     }
 }
 impl<'b> flatbuffers::Push for Block {
     type Output = Block;
     #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        let src = unsafe {
-            ::std::slice::from_raw_parts(self as *const Block as *const u8, Self::size())
-        };
-        dst.copy_from_slice(src);
-    }
-}
-impl<'b> flatbuffers::Push for &'b Block {
-    type Output = Block;
-
-    #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        let src = unsafe {
-            ::std::slice::from_raw_parts(*self as *const Block as *const u8, Self::size())
-        };
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        let src = ::core::slice::from_raw_parts(self as *const Block as *const u8, Self::size());
         dst.copy_from_slice(src);
     }
 }
@@ -85,7 +71,7 @@ impl<'a> flatbuffers::Verifiable for Block {
         v.in_buffer::<Self>(pos)
     }
 }
-impl Block {
+impl<'a> Block {
     #[allow(clippy::too_many_arguments)]
     pub fn new(offset: i64, metaDataLength: i32, bodyLength: i64) -> Self {
         let mut s = Self([0; 24]);
@@ -97,50 +83,60 @@ impl Block {
 
     /// Index to the start of the RecordBlock (note this is past the Message header)
     pub fn offset(&self) -> i64 {
-        let mut mem = core::mem::MaybeUninit::<i64>::uninit();
-        unsafe {
+        let mut mem = core::mem::MaybeUninit::<<i64 as EndianScalar>::Scalar>::uninit();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
+        EndianScalar::from_little_endian(unsafe {
             core::ptr::copy_nonoverlapping(
                 self.0[0..].as_ptr(),
                 mem.as_mut_ptr() as *mut u8,
-                core::mem::size_of::<i64>(),
+                core::mem::size_of::<<i64 as EndianScalar>::Scalar>(),
             );
             mem.assume_init()
-        }
-        .from_little_endian()
+        })
     }
 
     pub fn set_offset(&mut self, x: i64) {
         let x_le = x.to_little_endian();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
         unsafe {
             core::ptr::copy_nonoverlapping(
-                &x_le as *const i64 as *const u8,
+                &x_le as *const _ as *const u8,
                 self.0[0..].as_mut_ptr(),
-                core::mem::size_of::<i64>(),
+                core::mem::size_of::<<i64 as EndianScalar>::Scalar>(),
             );
         }
     }
 
     /// Length of the metadata
     pub fn metaDataLength(&self) -> i32 {
-        let mut mem = core::mem::MaybeUninit::<i32>::uninit();
-        unsafe {
+        let mut mem = core::mem::MaybeUninit::<<i32 as EndianScalar>::Scalar>::uninit();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
+        EndianScalar::from_little_endian(unsafe {
             core::ptr::copy_nonoverlapping(
                 self.0[8..].as_ptr(),
                 mem.as_mut_ptr() as *mut u8,
-                core::mem::size_of::<i32>(),
+                core::mem::size_of::<<i32 as EndianScalar>::Scalar>(),
             );
             mem.assume_init()
-        }
-        .from_little_endian()
+        })
     }
 
     pub fn set_metaDataLength(&mut self, x: i32) {
         let x_le = x.to_little_endian();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
         unsafe {
             core::ptr::copy_nonoverlapping(
-                &x_le as *const i32 as *const u8,
+                &x_le as *const _ as *const u8,
                 self.0[8..].as_mut_ptr(),
-                core::mem::size_of::<i32>(),
+                core::mem::size_of::<<i32 as EndianScalar>::Scalar>(),
             );
         }
     }
@@ -148,25 +144,30 @@ impl Block {
     /// Length of the data (this is aligned so there can be a gap between this and
     /// the metadata).
     pub fn bodyLength(&self) -> i64 {
-        let mut mem = core::mem::MaybeUninit::<i64>::uninit();
-        unsafe {
+        let mut mem = core::mem::MaybeUninit::<<i64 as EndianScalar>::Scalar>::uninit();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
+        EndianScalar::from_little_endian(unsafe {
             core::ptr::copy_nonoverlapping(
                 self.0[16..].as_ptr(),
                 mem.as_mut_ptr() as *mut u8,
-                core::mem::size_of::<i64>(),
+                core::mem::size_of::<<i64 as EndianScalar>::Scalar>(),
             );
             mem.assume_init()
-        }
-        .from_little_endian()
+        })
     }
 
     pub fn set_bodyLength(&mut self, x: i64) {
         let x_le = x.to_little_endian();
+        // Safety:
+        // Created from a valid Table for this object
+        // Which contains a valid value in this slot
         unsafe {
             core::ptr::copy_nonoverlapping(
-                &x_le as *const i64 as *const u8,
+                &x_le as *const _ as *const u8,
                 self.0[16..].as_mut_ptr(),
-                core::mem::size_of::<i64>(),
+                core::mem::size_of::<<i64 as EndianScalar>::Scalar>(),
             );
         }
     }
@@ -185,9 +186,9 @@ pub struct Footer<'a> {
 impl<'a> flatbuffers::Follow<'a> for Footer<'a> {
     type Inner = Footer<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -227,41 +228,55 @@ impl<'a> Footer<'a> {
 
     #[inline]
     pub fn version(&self) -> MetadataVersion {
-        self._tab
+        unsafe {
+            self._tab
             .get::<MetadataVersion>(Footer::VT_VERSION, Some(MetadataVersion::V1))
             .unwrap()
+        }
     }
     #[inline]
     pub fn schema(&self) -> Option<Schema<'a>> {
-        self._tab
+        unsafe {
+            self._tab
             .get::<flatbuffers::ForwardsUOffset<Schema>>(Footer::VT_SCHEMA, None)
+        }
     }
     #[inline]
-    pub fn dictionaries(&self) -> Option<&'a [Block]> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Block>>>(
-                Footer::VT_DICTIONARIES,
-                None,
-            )
-            .map(|v| v.safe_slice())
+    pub fn dictionaries(&self) -> Option<flatbuffers::Vector<'a, Block>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Block>>>(
+                    Footer::VT_DICTIONARIES,
+                    None,
+                )
+        }
     }
     #[inline]
-    pub fn recordBatches(&self) -> Option<&'a [Block]> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Block>>>(
-                Footer::VT_RECORDBATCHES,
-                None,
-            )
-            .map(|v| v.safe_slice())
+    pub fn recordBatches(&self) -> Option<flatbuffers::Vector<'a, Block>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Block>>>(
+                    Footer::VT_RECORDBATCHES,
+                    None,
+                )
+        }
     }
     /// User-defined metadata
     #[inline]
     pub fn custom_metadata(
         &self,
     ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<KeyValue<'a>>>> {
-        self._tab.get::<flatbuffers::ForwardsUOffset<
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<
             flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<KeyValue>>,
         >>(Footer::VT_CUSTOM_METADATA, None)
+        }
     }
 }
 
