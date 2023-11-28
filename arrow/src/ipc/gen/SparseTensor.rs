@@ -76,8 +76,8 @@ impl std::fmt::Debug for SparseMatrixCompressedAxis {
 impl<'a> flatbuffers::Follow<'a> for SparseMatrixCompressedAxis {
     type Inner = Self;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        let b = unsafe { flatbuffers::read_scalar_at::<i16>(buf, loc) };
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = flatbuffers::read_scalar_at::<i16>(buf, loc);
         Self(b)
     }
 }
@@ -85,20 +85,21 @@ impl<'a> flatbuffers::Follow<'a> for SparseMatrixCompressedAxis {
 impl flatbuffers::Push for SparseMatrixCompressedAxis {
     type Output = SparseMatrixCompressedAxis;
     #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        unsafe { flatbuffers::emplace_scalar::<i16>(dst, self.0) };
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<i16>(dst, self.0);
     }
 }
 
 impl flatbuffers::EndianScalar for SparseMatrixCompressedAxis {
+    type Scalar = i16;
     #[inline]
-    fn to_little_endian(self) -> Self {
-        let b = i16::to_le(self.0);
-        Self(b)
+    fn to_little_endian(self) -> i16 {
+        self.0.to_le()
     }
     #[inline]
-    fn from_little_endian(self) -> Self {
-        let b = i16::from_le(self.0);
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: i16) -> Self {
+        let b = i16::from_le(v);
         Self(b)
     }
 }
@@ -179,8 +180,8 @@ pub struct SparseTensorIndexUnionTableOffset {}
 impl<'a> flatbuffers::Follow<'a> for SparseTensorIndex {
     type Inner = Self;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = flatbuffers::read_scalar_at::<u8>(buf, loc);
         Self(b)
     }
 }
@@ -188,20 +189,21 @@ impl<'a> flatbuffers::Follow<'a> for SparseTensorIndex {
 impl flatbuffers::Push for SparseTensorIndex {
     type Output = SparseTensorIndex;
     #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0) };
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        flatbuffers::emplace_scalar::<u8>(dst, self.0);
     }
 }
 
 impl flatbuffers::EndianScalar for SparseTensorIndex {
+    type Scalar = u8;
     #[inline]
-    fn to_little_endian(self) -> Self {
-        let b = u8::to_le(self.0);
-        Self(b)
+    fn to_little_endian(self) -> u8 {
+        self.0.to_le()
     }
     #[inline]
-    fn from_little_endian(self) -> Self {
-        let b = u8::from_le(self.0);
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: u8) -> Self {
+        let b = u8::from_le(v);
         Self(b)
     }
 }
@@ -260,9 +262,9 @@ pub struct SparseTensorIndexCOO<'a> {
 impl<'a> flatbuffers::Follow<'a> for SparseTensorIndexCOO<'a> {
     type Inner = SparseTensorIndexCOO<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -299,29 +301,44 @@ impl<'a> SparseTensorIndexCOO<'a> {
     /// The type of values in indicesBuffer
     #[inline]
     pub fn indicesType(&self) -> Int<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<Int>>(
-                SparseTensorIndexCOO::VT_INDICESTYPE,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Int>>(
+                    SparseTensorIndexCOO::VT_INDICESTYPE,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// Non-negative byte offsets to advance one value cell along each dimension
     /// If omitted, default to row-major order (C-like).
     #[inline]
     pub fn indicesStrides(&self) -> Option<flatbuffers::Vector<'a, i64>> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i64>>>(
-                SparseTensorIndexCOO::VT_INDICESSTRIDES,
-                None,
-            )
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i64>>>(
+                    SparseTensorIndexCOO::VT_INDICESSTRIDES,
+                    None,
+                )
+        }
     }
     /// The location and size of the indices matrix's data
     #[inline]
     pub fn indicesBuffer(&self) -> &'a Buffer {
-        self._tab
-            .get::<Buffer>(SparseTensorIndexCOO::VT_INDICESBUFFER, None)
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Buffer>(SparseTensorIndexCOO::VT_INDICESBUFFER, None)
+                .unwrap()
+        }
     }
     /// This flag is true if and only if the indices matrix is sorted in
     /// row-major order, and does not have duplicated entries.
@@ -330,9 +347,14 @@ impl<'a> SparseTensorIndexCOO<'a> {
     /// (SciPy employs column-major order for its coo_matrix).
     #[inline]
     pub fn isCanonical(&self) -> bool {
-        self._tab
-            .get::<bool>(SparseTensorIndexCOO::VT_ISCANONICAL, Some(false))
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(SparseTensorIndexCOO::VT_ISCANONICAL, Some(false))
+                .unwrap()
+        }
     }
 }
 
@@ -456,9 +478,9 @@ pub struct SparseMatrixIndexCSX<'a> {
 impl<'a> flatbuffers::Follow<'a> for SparseMatrixIndexCSX<'a> {
     type Inner = SparseMatrixIndexCSX<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -499,22 +521,29 @@ impl<'a> SparseMatrixIndexCSX<'a> {
     /// Which axis, row or column, is compressed
     #[inline]
     pub fn compressedAxis(&self) -> SparseMatrixCompressedAxis {
-        self._tab
-            .get::<SparseMatrixCompressedAxis>(
-                SparseMatrixIndexCSX::VT_COMPRESSEDAXIS,
-                Some(SparseMatrixCompressedAxis::Row),
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<SparseMatrixCompressedAxis>(
+                    SparseMatrixIndexCSX::VT_COMPRESSEDAXIS,
+                    Some(SparseMatrixCompressedAxis::Row),
+                )
+                .unwrap()
+        }
     }
     /// The type of values in indptrBuffer
     #[inline]
     pub fn indptrType(&self) -> Int<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<Int>>(
-                SparseMatrixIndexCSX::VT_INDPTRTYPE,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Int>>(SparseMatrixIndexCSX::VT_INDPTRTYPE, None)
+                .unwrap()
+        }
     }
     /// indptrBuffer stores the location and size of indptr array that
     /// represents the range of the rows.
@@ -541,19 +570,29 @@ impl<'a> SparseMatrixIndexCSX<'a> {
     /// ```
     #[inline]
     pub fn indptrBuffer(&self) -> &'a Buffer {
-        self._tab
-            .get::<Buffer>(SparseMatrixIndexCSX::VT_INDPTRBUFFER, None)
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Buffer>(SparseMatrixIndexCSX::VT_INDPTRBUFFER, None)
+                .unwrap()
+        }
     }
     /// The type of values in indicesBuffer
     #[inline]
     pub fn indicesType(&self) -> Int<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<Int>>(
-                SparseMatrixIndexCSX::VT_INDICESTYPE,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Int>>(
+                    SparseMatrixIndexCSX::VT_INDICESTYPE,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// indicesBuffer stores the location and size of the array that
     /// contains the column indices of the corresponding non-zero values.
@@ -566,9 +605,14 @@ impl<'a> SparseMatrixIndexCSX<'a> {
     /// Note that the indices are sorted in lexicographical order for each row.
     #[inline]
     pub fn indicesBuffer(&self) -> &'a Buffer {
-        self._tab
-            .get::<Buffer>(SparseMatrixIndexCSX::VT_INDICESBUFFER, None)
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Buffer>(SparseMatrixIndexCSX::VT_INDICESBUFFER, None)
+                .unwrap()
+        }
     }
 }
 
@@ -708,9 +752,9 @@ pub struct SparseTensorIndexCSF<'a> {
 impl<'a> flatbuffers::Follow<'a> for SparseTensorIndexCSF<'a> {
     type Inner = SparseTensorIndexCSF<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -783,12 +827,14 @@ impl<'a> SparseTensorIndexCSF<'a> {
     /// The type of values in indptrBuffers
     #[inline]
     pub fn indptrType(&self) -> Int<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<Int>>(
-                SparseTensorIndexCSF::VT_INDPTRTYPE,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Int>>(SparseTensorIndexCSF::VT_INDPTRTYPE, None)
+                .unwrap()
+        }
     }
     /// indptrBuffers stores the sparsity structure.
     /// Each two consecutive dimensions in a tensor correspond to a buffer in
@@ -805,24 +851,33 @@ impl<'a> SparseTensorIndexCSF<'a> {
     ///                     ].
     /// ```
     #[inline]
-    pub fn indptrBuffers(&self) -> &'a [Buffer] {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Buffer>>>(
-                SparseTensorIndexCSF::VT_INDPTRBUFFERS,
-                None,
-            )
-            .map(|v| v.safe_slice())
-            .unwrap()
+    pub fn indptrBuffers(&self) -> flatbuffers::Vector<'a, Buffer> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Buffer>>>(
+                    SparseTensorIndexCSF::VT_INDPTRBUFFERS,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// The type of values in indicesBuffers
     #[inline]
     pub fn indicesType(&self) -> Int<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<Int>>(
-                SparseTensorIndexCSF::VT_INDICESTYPE,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Int>>(
+                    SparseTensorIndexCSF::VT_INDICESTYPE,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// indicesBuffers stores values of nodes.
     /// Each tensor dimension corresponds to a buffer in indicesBuffers.
@@ -836,14 +891,18 @@ impl<'a> SparseTensorIndexCSF<'a> {
     ///                      ].
     /// ```
     #[inline]
-    pub fn indicesBuffers(&self) -> &'a [Buffer] {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Buffer>>>(
-                SparseTensorIndexCSF::VT_INDICESBUFFERS,
-                None,
-            )
-            .map(|v| v.safe_slice())
-            .unwrap()
+    pub fn indicesBuffers(&self) -> flatbuffers::Vector<'a, Buffer> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, Buffer>>>(
+                    SparseTensorIndexCSF::VT_INDICESBUFFERS,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// axisOrder stores the sequence in which dimensions were traversed to
     /// produce the prefix tree.
@@ -853,12 +912,17 @@ impl<'a> SparseTensorIndexCSF<'a> {
     /// ```
     #[inline]
     pub fn axisOrder(&self) -> flatbuffers::Vector<'a, i32> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(
-                SparseTensorIndexCSF::VT_AXISORDER,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(
+                    SparseTensorIndexCSF::VT_AXISORDER,
+                    None,
+                )
+                .unwrap()
+        }
     }
 }
 
@@ -1015,9 +1079,9 @@ pub struct SparseTensor<'a> {
 impl<'a> flatbuffers::Follow<'a> for SparseTensor<'a> {
     type Inner = SparseTensor<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -1061,65 +1125,98 @@ impl<'a> SparseTensor<'a> {
 
     #[inline]
     pub fn type_type(&self) -> Type {
-        self._tab
-            .get::<Type>(SparseTensor::VT_TYPE_TYPE, Some(Type::NONE))
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Type>(SparseTensor::VT_TYPE_TYPE, Some(Type::NONE))
+                .unwrap()
+        }
     }
     /// The type of data contained in a value cell.
     /// Currently only fixed-width value types are supported,
     /// no strings or nested types.
     #[inline]
     pub fn type_(&self) -> flatbuffers::Table<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
-                SparseTensor::VT_TYPE_,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
+                    SparseTensor::VT_TYPE_,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// The dimensions of the tensor, optionally named.
     #[inline]
-    pub fn shape(
-        &self,
-    ) -> flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim<'a>>> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim>>,
-            >>(SparseTensor::VT_SHAPE, None)
-            .unwrap()
+    pub fn shape(&self) -> flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim<'a>>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<
+                    flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim>>,
+                >>(SparseTensor::VT_SHAPE, None)
+                .unwrap()
+        }
     }
     /// The number of non-zero values in a sparse tensor.
     #[inline]
     pub fn non_zero_length(&self) -> i64 {
-        self._tab
-            .get::<i64>(SparseTensor::VT_NON_ZERO_LENGTH, Some(0))
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i64>(SparseTensor::VT_NON_ZERO_LENGTH, Some(0))
+                .unwrap()
+        }
     }
     #[inline]
     pub fn sparseIndex_type(&self) -> SparseTensorIndex {
-        self._tab
-            .get::<SparseTensorIndex>(
-                SparseTensor::VT_SPARSEINDEX_TYPE,
-                Some(SparseTensorIndex::NONE),
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<SparseTensorIndex>(
+                    SparseTensor::VT_SPARSEINDEX_TYPE,
+                    Some(SparseTensorIndex::NONE),
+                )
+                .unwrap()
+        }
     }
     /// Sparse tensor index
     #[inline]
     pub fn sparseIndex(&self) -> flatbuffers::Table<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
-                SparseTensor::VT_SPARSEINDEX,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
+                    SparseTensor::VT_SPARSEINDEX,
+                    None,
+                )
+                .unwrap()
+        }
     }
     /// The location and size of the tensor's data
     #[inline]
     pub fn data(&self) -> &'a Buffer {
-        self._tab
-            .get::<Buffer>(SparseTensor::VT_DATA, None)
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Buffer>(SparseTensor::VT_DATA, None)
+                .unwrap()
+        }
     }
     #[inline]
     #[allow(non_snake_case)]

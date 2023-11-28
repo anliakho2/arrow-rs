@@ -36,9 +36,9 @@ pub struct TensorDim<'a> {
 impl<'a> flatbuffers::Follow<'a> for TensorDim<'a> {
     type Inner = TensorDim<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -67,13 +67,21 @@ impl<'a> TensorDim<'a> {
     /// Length of dimension
     #[inline]
     pub fn size_(&self) -> i64 {
-        self._tab.get::<i64>(TensorDim::VT_SIZE_, Some(0)).unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe { self._tab.get::<i64>(TensorDim::VT_SIZE_, Some(0)).unwrap() }
     }
     /// Name of the dimension, optional
     #[inline]
     pub fn name(&self) -> Option<&'a str> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<&str>>(TensorDim::VT_NAME, None)
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(TensorDim::VT_NAME, None)
+        }
     }
 }
 
@@ -157,9 +165,9 @@ pub struct Tensor<'a> {
 impl<'a> flatbuffers::Follow<'a> for Tensor<'a> {
     type Inner = Tensor<'a>;
     #[inline]
-    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
-            _tab: flatbuffers::Table { buf, loc },
+            _tab: flatbuffers::Table::new(buf, loc),
         }
     }
 }
@@ -199,46 +207,64 @@ impl<'a> Tensor<'a> {
 
     #[inline]
     pub fn type_type(&self) -> Type {
-        self._tab
-            .get::<Type>(Tensor::VT_TYPE_TYPE, Some(Type::NONE))
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<Type>(Tensor::VT_TYPE_TYPE, Some(Type::NONE))
+                .unwrap()
+        }
     }
     /// The type of data contained in a value cell. Currently only fixed-width
     /// value types are supported, no strings or nested types
     #[inline]
     pub fn type_(&self) -> flatbuffers::Table<'a> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
-                Tensor::VT_TYPE_,
-                None,
-            )
-            .unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(Tensor::VT_TYPE_, None)
+                .unwrap()
+        }
     }
     /// The dimensions of the tensor, optionally named
     #[inline]
-    pub fn shape(
-        &self,
-    ) -> flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim<'a>>> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim>>,
-            >>(Tensor::VT_SHAPE, None)
-            .unwrap()
+    pub fn shape(&self) -> flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim<'a>>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<
+                    flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TensorDim>>,
+                >>(Tensor::VT_SHAPE, None)
+                .unwrap()
+        }
     }
     /// Non-negative byte offsets to advance one value cell along each dimension
     /// If omitted, default to row-major order (C-like).
     #[inline]
     pub fn strides(&self) -> Option<flatbuffers::Vector<'a, i64>> {
-        self._tab
-            .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i64>>>(
-                Tensor::VT_STRIDES,
-                None,
-            )
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i64>>>(
+                    Tensor::VT_STRIDES,
+                    None,
+                )
+        }
     }
     /// The location and size of the tensor's data
     #[inline]
     pub fn data(&self) -> &'a Buffer {
-        self._tab.get::<Buffer>(Tensor::VT_DATA, None).unwrap()
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe { self._tab.get::<Buffer>(Tensor::VT_DATA, None).unwrap() }
     }
     #[inline]
     #[allow(non_snake_case)]
