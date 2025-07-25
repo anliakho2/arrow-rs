@@ -23,7 +23,7 @@ use crate::util::test_util::seedable_rng;
 use rand::Rng;
 use rand::SeedableRng;
 use rand::{
-    distributions::{Alphanumeric, Distribution, Standard},
+    distr::{Alphanumeric, Distribution, StandardUniform as Standard},
     prelude::StdRng,
 };
 
