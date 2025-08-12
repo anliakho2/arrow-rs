@@ -19,7 +19,7 @@
 
 use std::{convert::TryFrom, sync::Arc};
 
-use rand::{distributions::uniform::SampleUniform, Rng};
+use rand::{distr::uniform::SampleUniform, Rng};
 
 use crate::error::{ArrowError, Result};
 use crate::record_batch::{RecordBatch, RecordBatchOptions};
